@@ -1,0 +1,14 @@
+# Boty wyszukiwarek i asystentów odpowiadających użytkownikom mają pełny dostęp: treść ma być cytowana u źródła.
+User-agent: *
+Allow: /
+
+# Pobieranie treści do trenowania modeli: zablokowane (jak podatek-katastralny.pl, 02.11.2026).
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://gtown.pl/sitemap-index.xml
