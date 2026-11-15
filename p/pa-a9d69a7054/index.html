@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="referrer" content="no-referrer">
+<title>Palermo 15.11</title>
+<style>
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: one phone-width column. A sticky clock strip on top, then the route as a
+   vertical line of numbered tiles drawn like Palermo's ceramic house numbers. */
+:root{
+  --bg:#f3f5fa; --surface:#ffffff; --ink:#131a2b; --muted:#566076; --line:#d5dcea;
+  --cobalt:#1f3f9a; --lemon:#f2bd1d; --on-lemon:#131a2b; --sea:#0b7566; --warn:#a04a08; --bad:#b3261e;
+  --strip:#1f3f9a; --on-strip:#ffffff; --on-strip-muted:#c9d4f5; --tile:#ffffff;
+  --display:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",Arial,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1322; --surface:#161e33; --ink:#e8ecf5; --muted:#9ba6be; --line:#2a3550;
+    --cobalt:#9db3ff; --lemon:#f5c93a; --on-lemon:#131a2b; --sea:#56d3ba; --warn:#f2a657; --bad:#ff8f85;
+    --strip:#18265a; --on-strip:#eef1fa; --on-strip-muted:#aab8e6; --tile:#111930;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1322; --surface:#161e33; --ink:#e8ecf5; --muted:#9ba6be; --line:#2a3550;
+  --cobalt:#9db3ff; --lemon:#f5c93a; --on-lemon:#131a2b; --sea:#56d3ba; --warn:#f2a657; --bad:#ff8f85;
+  --strip:#18265a; --on-strip:#eef1fa; --on-strip-muted:#aab8e6; --tile:#111930;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--strip)}
+a{color:var(--cobalt)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--lemon);outline-offset:2px}
+
+.strip{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--strip);color:var(--on-strip)}
+.strip-in,.wrap{max-width:660px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.strip-in{padding-block:10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 16px}
+.clock{font-family:var(--display);font-weight:700;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.next{flex:1 1 200px;min-width:0;font-weight:500}
+.sunset{flex:1 1 100%;color:var(--on-strip-muted);font-size:13px}
+
+.wrap{padding-block:22px 48px;display:flex;flex-direction:column;gap:26px}
+h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.15;margin:0 0 10px;text-wrap:balance}
+h3{font-size:17px;font-weight:600;line-height:1.25;margin:0}
+.lede{margin:8px 0 0;color:var(--muted);max-width:60ch}
+
+.controls{display:flex;flex-direction:column;gap:12px}
+.shift{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.shift output{flex:1 1 100%;min-width:0;font-weight:500}
+.btn{border:1.5px solid var(--cobalt);background:var(--surface);color:var(--cobalt);border-radius:6px;padding:8px 12px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--cobalt);color:var(--bg)}
+.btn:disabled{opacity:.45;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.route{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.stop{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;position:relative;padding-bottom:24px}
+.stop::before{content:"";position:absolute;left:21px;top:44px;bottom:0;width:2px;background:var(--line)}
+.stop:last-child::before{display:none}
+.tile{width:44px;height:44px;display:grid;place-items:center;background:var(--tile);color:var(--cobalt);border:2px solid var(--cobalt);box-shadow:inset 0 0 0 2px var(--tile),inset 0 0 0 3px var(--lemon);border-radius:3px;font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+.stop[data-state="now"] .tile{background:var(--lemon);color:var(--on-lemon);box-shadow:none}
+.stop[data-state="done"] .tile{border-color:var(--sea);color:var(--sea);box-shadow:none}
+.stop[data-state="done"] .card>*:not(.actions),.stop[data-state="past"] .card>*:not(.actions){opacity:.55}
+.card{min-width:0;display:flex;flex-direction:column;gap:6px}
+.when{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.time{font-family:var(--display);font-weight:700;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
+.walk{font-size:13px;color:var(--muted)}
+.badge{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--cobalt)}
+.what{margin:0;max-width:60ch}
+.meta{margin:0;font-size:13.5px;color:var(--muted)}
+.meta b{color:var(--sea);font-weight:600}
+.flag{margin:0;font-size:13.5px;font-weight:600}
+.flag[data-lvl="warn"]{color:var(--warn)}
+.flag[data-lvl="bad"]{color:var(--bad)}
+.alt{margin:0;font-size:13.5px;border-left:3px solid var(--lemon);padding-left:10px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:2px}
+.go{display:inline-block;background:var(--cobalt);color:var(--bg);text-decoration:none;font-weight:600;border-radius:6px;padding:8px 14px}
+.done{display:inline-flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0}
+.done input{width:20px;height:20px;margin:0;accent-color:var(--sea)}
+.sun{display:flex;align-items:center;gap:10px;padding:0 0 24px 56px;color:var(--warn);font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.sun::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--lemon),transparent)}
+
+.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:62ch}
+details{border-top:1px solid var(--line);padding-block:12px}
+.folds details:last-child{border-bottom:1px solid var(--line)}
+summary{font-family:var(--display);font-weight:700;font-size:20px;cursor:pointer}
+details>*:not(summary){margin-top:10px}
+.phr{margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;max-width:62ch}
+.phr dt{font-weight:600}
+.phr dd{margin:0;color:var(--muted)}
+footer{font-size:12.5px;color:var(--muted);max-width:62ch}
+</style>
+</head>
+<body>
+
+<div class="strip" role="status" aria-live="polite">
+  <div class="strip-in">
+    <span class="clock" id="clock">15.11</span>
+    <span class="next" id="next">Plan na niedzielę 15.11.2026</span>
+    <span class="sunset" id="sunset">Zachód słońca 16:54</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>Palermo, niedziela 15.11</h1>
+    <p class="lede">Pętla piesza ok. 5,5 km, start i meta przy noclegu. 23°C, słońce, bez deszczu. Te same punkty masz w Mapach Google: Zapisane, lista „Palermo niedziela 15.11”.</p>
+  </header>
+
+  <section class="controls" aria-label="Ustawienia planu">
+    <div class="shift">
+      <output id="shiftLabel" for="earlier later startNow reset">Plan zgodny z rozkładem.</output>
+      <button class="btn primary" id="startNow" type="button">Zaczynam teraz</button>
+      <button class="btn" id="earlier" type="button">15 min wcześniej</button>
+      <button class="btn" id="later" type="button">15 min później</button>
+      <button class="btn" id="reset" type="button">Zeruj</button>
+    </div>
+    <div class="chips" role="group" aria-label="Filtr punktów">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">Wszystko</button>
+      <button class="chip" type="button" data-filter="miejsce" aria-pressed="false">Zabytki i spacer</button>
+      <button class="chip" type="button" data-filter="jedzenie" aria-pressed="false">Jedzenie</button>
+      <button class="chip" type="button" data-filter="dzis" aria-pressed="false">Tylko dziś</button>
+    </div>
+  </section>
+
+  <ol class="route" id="route"></ol>
+
+  <section>
+    <h2>Zamiana na życzenie</h2>
+    <p class="what">Palazzo Butera, Via Butera 8, obok punktu 2. Muzeum i taras nad morzem, dziś 10:00–19:00. Wejdzie zamiast katedry albo spaceru po murach. <a href="https://www.google.com/maps/dir/?api=1&amp;travelmode=walking&amp;destination=Palazzo%20Butera%2C%20Via%20Butera%208%2C%20Palermo" target="_blank" rel="noopener">Prowadź</a></p>
+  </section>
+
+  <section class="folds">
+    <details open>
+      <summary>Dziś w mieście</summary>
+      <ul class="plain">
+        <li>31. Maratona di Palermo: start 8:30, zamknięcia przy Via Libertà do 15:00. Trasa obejmuje Via Roma, Via Maqueda, Cassaro i Quattro Canti, dlatego do 15:00 plan trzyma cię w Kalsie.</li>
+        <li>Sherbeth Festival, 13–16.11: lody rzemieślnicze na Piazza Verdi i Via Maqueda, stoiska 10:00–24:00.</li>
+        <li>Jazz zamiast koncertu barokowego: Bobby Watson Quartet, Real Teatro Santa Cecilia, 18:00 i 20:30, 20–26 €.</li>
+        <li>Brunori Sas w Politeama o 21:00 jest wyprzedany. Palermo nie gra dziś u siebie.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Co dziś odpada</summary>
+      <ul class="plain">
+        <li>Cappella Palatina: w niedzielę ostatnie wejście 12:30, do tego trwa renowacja mozaik. Zostaw na rano w dzień powszedni.</li>
+        <li>Dachy, skarbiec i groby królewskie katedry: w niedzielę 9:00–13:00.</li>
+        <li>Palazzo Abatellis: dziś do 13:00, w poniedziałek zamknięte.</li>
+        <li>Taverna Azzurra w Vucciri: w niedzielę zamknięta.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Niedziela w Palermo z reguły</summary>
+      <ul class="plain">
+        <li>Rano msze. Kościoły-zabytki zwiedza się między mszami albo po południu.</li>
+        <li>Muzea państwowe działają do 13:00–13:30, w poniedziałek są zamknięte.</li>
+        <li>Targi Ballarò i Capo zwijają się ok. 13–14. Starocie na Piazza Marina są tylko w niedzielę rano.</li>
+        <li>Obiad niedzielny 13:00–15:30 to główny posiłek tygodnia. Kuchnie stoją potem do 19:00–19:30, kolacja od 20:00.</li>
+        <li>Po mszy idzie się do cukierni po tacę cannoli i cassaty.</li>
+        <li>Od ok. 17:00 passeggiata na deptakach Via Maqueda i Cassaro.</li>
+        <li>Autobusy AMAT jeżdżą rzadziej, pieszo jest szybciej.</li>
+        <li>Darmowe muzea są w pierwszą niedzielę miesiąca. Dziś trzecia.</li>
+      </ul>
+    </details>
+    <details>
+      <summary>Przy ladzie i przy stole</summary>
+      <dl class="phr">
+        <div><dt>Un pane e panelle, per favore.</dt><dd>Bułka z plackami z mąki z ciecierzycy. Z crocchè, czyli krokietami ziemniaczanymi, też.</dd></div>
+        <div><dt>Schietta o maritata?</dt><dd>Pytanie przy pani ca' meusa, bułce ze śledzioną. Schietta: sama z cytryną. Maritata: z ricottą albo caciocavallo.</dd></div>
+        <div><dt>Un'arancina al ragù.</dt><dd>W Palermo arancina jest rodzaju żeńskiego. Arancino mówi się w Katanii.</dd></div>
+        <div><dt>Un cannolo, riempito al momento.</dt><dd>Cannolo nadziewane przy tobie, rurka zostaje chrupiąca.</dd></div>
+        <div><dt>Un tavolo per due stasera alle venti e trenta?</dt><dd>Stolik dla dwojga dziś na 20:30?</dd></div>
+        <div><dt>Il conto, per favore. Posso pagare con la carta?</dt><dd>Rachunek poproszę. Czy mogę zapłacić kartą? Coperto to opłata za nakrycie doliczana do rachunku.</dd></div>
+      </dl>
+    </details>
+  </section>
+
+  <footer>Godziny otwarcia: karty miejsc w Mapach Google, odczyt 15.11.2026 ok. 12:00. Wydarzenia: Balarm, CataniaBlog. Pogoda i zachód słońca: Open-Meteo. Ceny oznaczone jako niepotwierdzone pochodzą z wiedzy ogólnej. Odhaczenia i przesunięcie planu zapisują się w adresie strony, nic nie trafia do pamięci telefonu.</footer>
+</div>
+
+<script>
+(function(){
+  var DAY='2026-11-15', SUNSET=1014;
+  var S=[
+    {id:'marina',n:'1',t:750,dur:25,min:10,walk:6,name:'Mercato di Piazza Marina',kinds:['miejsce','dzis'],
+     what:'Targ staroci wokół ogrodu Garibaldiego, działa tylko w niedzielę. W ogrodzie rośnie ogromny fikus z korzeniami powietrznymi.',
+     open:[[420,780]],price:'Wstęp wolny',q:'Mercato di Piazza Marina, Palermo'},
+    {id:'mura',n:'2',t:775,dur:15,min:5,walk:4,name:'Mura delle Cattive i Porta Felice',kinds:['miejsce'],
+     what:'Promenada na dawnych murach nad Foro Italico, z widokiem na morze.',
+     open:null,price:'Teren otwarty',q:'Passeggiata delle Cattive, Palermo'},
+    {id:'chiluzzo',n:'3',t:795,dur:40,min:15,walk:5,name:'Friggitoria Chiluzzo',kinds:['jedzenie'],
+     what:'Obiad z lady przy Piazza della Kalsa 11: pane e panelle, crocchè, pani ca\' meusa. Ocena 4,7 w Mapach.',
+     open:[[480,960]],price:'Jedzenie uliczne',q:'Friggitoria Chiluzzo, Piazza della Kalsa 11, Palermo',
+     alt:{name:'Antica Focacceria San Francesco',note:'na siedząco, 50 m od punktu 4, dziś 11:00–23:00, 10–20 € za osobę',q:'Antica Focacceria San Francesco, Via Alessandro Paternostro 58, Palermo'}},
+    {id:'lorenzo',n:'4',t:855,dur:25,min:15,walk:8,name:'Oratorio di San Lorenzo',kinds:['miejsce'],
+     what:'Białe stiuki Giacoma Serpotty. Nad ołtarzem wisi kopia „Narodzenia” Caravaggia; oryginał skradziono w 1969 r.',
+     open:[[600,1080]],price:'Bilet ok. 4 €, niepotwierdzone',q:'Oratorio di San Lorenzo, Via Immacolatella 5, Palermo'},
+    {id:'cataldo',n:'5',t:900,dur:15,min:10,walk:7,name:'San Cataldo',kinds:['miejsce'],
+     what:'Normański kościół z XII w. z trzema czerwonymi kopułami i surowym wnętrzem.',
+     open:[[600,840],[870,1080]],price:'Bilet ok. 2,50 €, niepotwierdzone',q:'Chiesa di San Cataldo, Piazza Bellini, Palermo'},
+    {id:'caterina',n:'6',t:925,dur:65,min:45,walk:1,name:'Santa Caterina d\'Alessandria',kinds:['miejsce'],
+     what:'Barokowy kościół, dawny klasztor klauzurowy i dach z widokiem na Piazza Pretoria. Na dach wejdź ok. 16:00, światło jest wtedy najlepsze.',
+     open:[[600,1035]],price:'Kościół 3 €; z klasztorem i dachem ok. 10 €, niepotwierdzone',q:'Chiesa di Santa Caterina d\'Alessandria, Piazza Bellini, Palermo'},
+    {id:'chiostro',n:'7',t:995,dur:15,min:5,walk:0,name:'I Segreti del Chiostro',kinds:['jedzenie'],
+     what:'Cukiernia w krużganku klasztoru. Cannolo nadziewają ricottą przy tobie.',
+     open:[[600,1050]],price:'Cannolo kilka euro',q:'I Segreti del Chiostro, Piazza Bellini 33, Palermo'},
+    {sun:true},
+    {id:'pretoria',n:'8',t:1015,dur:20,min:5,walk:2,name:'Fontana Pretoria i Quattro Canti',kinds:['miejsce'],
+     what:'Fontanna z marmurowymi figurami, potem barokowe skrzyżowanie dwóch głównych ulic. Zmierzch i zapalające się światła.',
+     open:null,price:'Teren otwarty',q:'Fontana Pretoria, Palermo'},
+    {id:'katedra',n:'9',t:1040,dur:30,min:15,walk:7,name:'Katedra',kinds:['miejsce'],
+     what:'Wnętrze i oświetlona fasada. Dachy, skarbiec i groby królewskie są w niedzielę tylko 9:00–13:00.',
+     open:[[0,1140]],openLabel:'Dziś do 19:00',price:'Wnętrze bezpłatne',q:'Cattedrale di Palermo'},
+    {id:'sherbeth',n:'10',t:1095,dur:40,min:15,walk:13,name:'Sherbeth Festival przy Teatro Massimo',kinds:['jedzenie','dzis'],
+     what:'Festiwal lodów rzemieślniczych, 60 lodziarzy z pięciu kontynentów. Stoiska na Piazza Verdi i Via Maqueda, rozmowa z gośćmi 18:30–19:15.',
+     open:[[600,1440]],price:'Degustacja na kupony z kasy festiwalu, cena niepotwierdzona',q:'Teatro Massimo, Piazza Verdi, Palermo'},
+    {id:'cita',n:'11',t:1140,dur:75,min:60,walk:8,fixed:true,name:'Koncert w Oratorio di Santa Cita',kinds:['dzis'],
+     what:'Opcja: koncert barokowy „Splendori della triosonata” wśród stiuków Serpotty. Rezerwacja telefoniczna u organizatora. Wydarzenie potwierdza jedno źródło.',
+     open:null,openLabel:'Koncert 19:00',price:'5–10 €',q:'Oratorio di Santa Cita, Via Valverde 3, Palermo'},
+    {id:'ajamola',n:'12',t:1230,dur:80,min:60,walk:5,name:'Aja Mola',kinds:['jedzenie'],
+     what:'Kolacja rybna przy Via dei Cassari 39, dwie minuty od noclegu. Zarezerwuj stolik.',
+     open:[[750,900],[1170,1410]],price:'Restauracja',q:'Aja Mola Trattoria di Mare, Via dei Cassari 39, Palermo',
+     alt:{name:'Il Maestro del Brodo',note:'kuchnia sycylijska, Via Pannieri 7, dziś 19:00–23:00, ocena 4,5',q:'Il Maestro del Brodo, Via Pannieri 7, Palermo'}},
+    {id:'vucciria',n:'13',t:1320,dur:30,min:10,walk:2,name:'La Vucciria',kinds:['miejsce','jedzenie'],
+     what:'Wieczorem na Piazza Caracciolo dymią grille i grają bary. Stąd masz dwie minuty do noclegu.',
+     open:null,price:'Teren otwarty',q:'La Vucciria, Piazza Caracciolo, Palermo'}
+  ];
+
+  var mem={'pa1511.done':{},'pa1511.offset':0};
+  (function(){
+    var h=(location.hash||'').replace(/^#/,'').split('&');
+    for(var i=0;i<h.length;i++){
+      var kv=h[i].split('=');
+      if(kv[0]==='o'&&/^-?\d+$/.test(kv[1]||''))mem['pa1511.offset']=Number(kv[1]);
+      if(kv[0]==='d'&&kv[1])kv[1].split('.').forEach(function(id){if(/^[a-z]+$/.test(id))mem['pa1511.done'][id]=1;});
+    }
+  })();
+  var store={
+    get:function(k,d){return k in mem?mem[k]:d;},
+    set:function(k,v){
+      mem[k]=v;
+      var d=Object.keys(mem['pa1511.done']).join('.'),o=mem['pa1511.offset'],p=[];
+      if(o)p.push('o='+o);
+      if(d)p.push('d='+d);
+      try{history.replaceState(null,'',p.length?'#'+p.join('&'):location.pathname);}catch(e){}
+    }
+  };
+  var done=store.get('pa1511.done',{})||{};
+  var offset=Number(store.get('pa1511.offset',0))||0;
+  var filter='all';
+
+  var $=function(id){return document.getElementById(id);};
+  function hm(m){m=Math.round(m);var h=Math.floor(m/60),x=m%60;return (h<10?'0':'')+h+':'+(x<10?'0':'')+x;}
+  function span(m){if(m<60)return m+' min';var h=Math.floor(m/60),x=m%60;return h+' h'+(x?' '+x+' min':'');}
+  function now(){
+    try{
+      var p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+      var g=function(t){for(var i=0;i<p.length;i++){if(p[i].type===t)return p[i].value;}return '0';};
+      return {date:g('year')+'-'+g('month')+'-'+g('day'),min:(Number(g('hour'))%24)*60+Number(g('minute'))};
+    }catch(e){
+      var d=new Date();
+      return {date:d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2),min:d.getHours()*60+d.getMinutes()};
+    }
+  }
+  function at(s){return s.t+(s.fixed?0:offset);}
+  function check(s,a){
+    if(!s.open)return null;
+    var w=s.open,i;
+    for(i=0;i<w.length;i++){
+      if(a>=w[i][0]&&a<w[i][1]){
+        if(a+s.min>w[i][1])return {lvl:'bad',txt:'Za późno: zamykają o '+hm(w[i][1])+'.'};
+        if(a+s.dur>w[i][1])return {lvl:'warn',txt:'Krótko: zamykają o '+hm(w[i][1])+', zostaje '+(w[i][1]-a)+' min.'};
+        return null;
+      }
+    }
+    for(i=0;i<w.length;i++){if(w[i][0]>a)return {lvl:'warn',txt:'Jeszcze zamknięte, otwierają o '+hm(w[i][0])+'.'};}
+    return {lvl:'bad',txt:'Zamknięte od '+hm(w[w.length-1][1])+'.'};
+  }
+  function hours(s){
+    if(s.openLabel)return s.openLabel;
+    if(!s.open)return '';
+    return 'Dziś '+s.open.map(function(w){return hm(w[0])+'–'+hm(w[1]);}).join(', ');
+  }
+  function closing(s,m){
+    if(!s.open)return '';
+    for(var i=0;i<s.open.length;i++){
+      var w=s.open[i];
+      if(m>=w[0]&&m<w[1]&&w[1]-m<=90)return ', zamykają za '+(w[1]-m)+' min';
+    }
+    return '';
+  }
+  function maps(q){return 'https://www.google.com/maps/dir/?api=1&travelmode=walking&destination='+encodeURIComponent(q);}
+  function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+  function render(){
+    var n=now(),live=n.date===DAY;
+    var stops=S.filter(function(s){return !s.sun;});
+    var undone=stops.filter(function(s){return !done[s.id];});
+    var cur=null,nxt=null,i;
+    if(live){
+      for(i=0;i<undone.length;i++){var u=undone[i];if(!cur&&n.min>=at(u)&&n.min<at(u)+u.dur)cur=u;if(!nxt&&at(u)>n.min)nxt=u;}
+    }
+    var focusId=document.activeElement&&document.activeElement.id;
+
+    $('clock').textContent=live?hm(n.min):'15.11';
+    var line='Plan na niedzielę 15.11.2026';
+    if(live){
+      if(cur)line='Teraz '+cur.n+': '+cur.name+(nxt?'. Dalej '+nxt.n+' o '+hm(at(nxt)):'');
+      else if(nxt)line='Dalej '+nxt.n+': '+nxt.name+', za '+span(at(nxt)-n.min);
+      else line=undone.length?'Reszta planu jest po czasie. Przesuń plan albo odhacz punkty.':'Plan zamknięty. Dobrej nocy.';
+    }
+    $('next').textContent=line;
+    $('sunset').textContent=live?(n.min<SUNSET?'Zachód słońca 16:54, za '+span(SUNSET-n.min):'Po zachodzie słońca (16:54)'):'Zachód słońca 16:54';
+
+    var bad=0;
+    $('route').innerHTML=S.map(function(s){
+      if(s.sun)return '<li class="sun"'+(filter==='all'?'':' hidden')+'>Zachód słońca 16:54</li>';
+      var a=at(s),f=check(s,a);
+      if(f&&f.lvl==='bad')bad++;
+      var state=done[s.id]?'done':(cur===s?'now':(nxt===s?'next':(live&&a+s.dur<=n.min?'past':'')));
+      var badge={now:'teraz',next:'następny',past:'minęło',done:'odhaczone'}[state]||'';
+      var show=filter==='all'||s.kinds.indexOf(filter)>-1;
+      var h=hours(s);
+      return '<li class="stop" data-state="'+state+'"'+(show?'':' hidden')+'>'+
+        '<div class="tile" aria-hidden="true">'+s.n+'</div>'+
+        '<div class="card">'+
+          '<div class="when"><span class="time">'+hm(a)+'</span>'+
+            '<span class="walk">'+(s.walk?s.walk+' min pieszo, ':'na miejscu, ')+'postój '+span(s.dur)+'</span>'+
+            (badge?'<span class="badge">'+badge+'</span>':'')+'</div>'+
+          '<h3>'+esc(s.name)+'</h3>'+
+          '<p class="what">'+esc(s.what)+'</p>'+
+          '<p class="meta">'+(h?'<b>'+esc(h)+(live?closing(s,n.min):'')+'</b> · ':'')+esc(s.price)+'</p>'+
+          (f?'<p class="flag" data-lvl="'+f.lvl+'">'+esc(f.txt)+'</p>':'')+
+          (s.alt?'<p class="alt">Zamiennik: <a href="'+maps(s.alt.q)+'" target="_blank" rel="noopener">'+esc(s.alt.name)+'</a>, '+esc(s.alt.note)+'.</p>':'')+
+          '<div class="actions"><a class="go" href="'+maps(s.q)+'" target="_blank" rel="noopener">Prowadź</a>'+
+            '<label class="done" for="done-'+s.id+'"><input type="checkbox" id="done-'+s.id+'" data-id="'+s.id+'"'+(done[s.id]?' checked':'')+'> Byłem</label></div>'+
+        '</div></li>';
+    }).join('');
+
+    var label=offset===0?'Plan zgodny z rozkładem.':'Plan przesunięty o '+(offset>0?'+':'−')+Math.abs(offset)+' min.';
+    if(bad)label+=' Kolizje z godzinami zamknięcia: '+bad+'.';
+    $('shiftLabel').textContent=label;
+    $('startNow').disabled=!live;
+    $('reset').disabled=offset===0;
+    if(focusId&&$(focusId))$(focusId).focus();
+  }
+
+  function setOffset(v){offset=Math.max(-90,Math.min(240,v));store.set('pa1511.offset',offset);render();}
+  $('earlier').addEventListener('click',function(){setOffset(offset-15);});
+  $('later').addEventListener('click',function(){setOffset(offset+15);});
+  $('reset').addEventListener('click',function(){setOffset(0);});
+  $('startNow').addEventListener('click',function(){
+    var n=now();
+    for(var i=0;i<S.length;i++){
+      var s=S[i];
+      if(s.sun||s.fixed||done[s.id])continue;
+      setOffset(Math.ceil((n.min+s.walk)/5)*5-s.t);
+      return;
+    }
+  });
+  $('route').addEventListener('change',function(e){
+    var id=e.target&&e.target.getAttribute('data-id');
+    if(!id)return;
+    if(e.target.checked)done[id]=1;else delete done[id];
+    store.set('pa1511.done',done);
+    render();
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(c){
+    c.addEventListener('click',function(){
+      filter=c.getAttribute('data-filter');
+      Array.prototype.forEach.call(document.querySelectorAll('.chip'),function(x){x.setAttribute('aria-pressed',x===c?'true':'false');});
+      render();
+    });
+  });
+  render();
+  setInterval(render,30000);
+})();
+</script>
+</body>
+</html>
